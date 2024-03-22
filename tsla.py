@@ -1,11 +1,8 @@
 # %%
-pip install sqlalchemy
-
-
-# %%
 import pandas as pd
 import numpy as np
 import yfinance as yf
+import mplfinance as mpf
 
 # %%
 from sqlalchemy import create_engine
@@ -20,9 +17,8 @@ try:
 except Exception as e:
     print("Unable to connect to the database:", e)
 
-
 # %%
-query = 'SELECT * FROM aapl'  # Adjust query based on your table structure
+query = 'SELECT * FROM tsla'  # Adjust query based on your table structure
 df = pd.read_sql(query, engine)
 
 # %%
@@ -35,41 +31,46 @@ df.info()
 df.describe()
 
 # %%
+df.shape
+
+# %%
 df.duplicated().sum()
 
-# %% [markdown]
-# There are no duplicate values,missing values,etc.
-
 # %%
-# Fetch AAPL stock data from Yahoo Finance
-start_date = '2021-02-21'
+# Fetch TSLA stock data from Yahoo Finance
+start_date = '2021-02-20'
 end_date = '2024-02-17'
-aapl = yf.download('AAPL', start=start_date, end=end_date)
-aapl.reset_index(inplace=True)
+tsla = yf.download('TSLA', start=start_date, end=end_date)
+tsla.reset_index(inplace=True)
 
 # %%
-# Calculate moving averages for AAPL data
-aapl['50-day MA'] = aapl['Close'].rolling(window=50).mean()
-aapl['500-day MA'] = aapl['Close'].rolling(window=500).mean()
-aapl['20-day MA'] = aapl['Close'].rolling(window=20).mean()
-aapl['200-day MA'] = aapl['Close'].rolling(window=200).mean()
-aapl['10-day MA'] = aapl['Close'].rolling(window=10).mean()
-aapl['5-day MA'] = aapl['Close'].rolling(window=5).mean()
+# Calculate moving averages for TSLA data
+tsla['50-day MA'] = tsla['Close'].rolling(window=50).mean()
+tsla['500-day MA'] = tsla['Close'].rolling(window=500).mean()
+tsla['20-day MA'] = tsla['Close'].rolling(window=20).mean()
+tsla['200-day MA'] = tsla['Close'].rolling(window=200).mean()
+tsla['10-day MA'] = tsla['Close'].rolling(window=10).mean()
+tsla['5-day MA'] = tsla['Close'].rolling(window=5).mean()
 
 # %%
-# Assign moving average values from AAPL data to the corresponding columns in df
-df['50-day MA'] = aapl['50-day MA'].iloc[503:753].values
-df['500-day MA'] = aapl['500-day MA'].iloc[503:753].values
-df['20-day MA'] = aapl['20-day MA'].iloc[503:753].values
-df['200-day MA'] = aapl['200-day MA'].iloc[503:753].values
-df['10-day MA'] = aapl['10-day MA'].iloc[503:753].values
-df['5-day MA'] = aapl['5-day MA'].iloc[503:753].values
+tsla
+
+# %%
+tsla[tsla['Date']=='2023-02-21']
+
+# %%
+# Assign moving average values from TSLA data to the corresponding columns in df
+df['50-day MA'] = tsla['50-day MA'].iloc[503:753].values
+df['500-day MA'] = tsla['500-day MA'].iloc[503:753].values
+df['20-day MA'] = tsla['20-day MA'].iloc[503:753].values
+df['200-day MA'] = tsla['200-day MA'].iloc[503:753].values
+df['10-day MA'] = tsla['10-day MA'].iloc[503:753].values
+df['5-day MA'] = tsla['5-day MA'].iloc[503:753].values
 
 # %%
 # Generate buy and sell signals
 df['Buy Signal'] = ((df['50-day MA'] > df['500-day MA']) & (df['20-day MA'] > df['200-day MA'])).astype(int)
 df['Sell Signal'] = ((df['20-day MA'] < df['200-day MA']) & (df['10-day MA'] < df['5-day MA'])).astype(int)
-
 
 # %%
 # Generate buy and sell signals, and track buy/sell positions (remaining part)
@@ -96,20 +97,17 @@ for index, row in df.iterrows():
             positions.append(('Close Sell', row['Date'], row['Close']))
 
 # %%
+df
+
+# %%
 # Print the buy/sell positions
 print("Buy/Sell Positions:")
 for position in positions:
     print(position)
 
 # %%
-
-
-# %% [markdown]
-# Here since the stock has only been bought according to the conditions specified. To get rough idea of profit/loss I have exited the stock on the latest date given to get potential profit/loss
-
-# %%
 # Initialize variables
-stock_name = 'AAPL'  # Assuming the stock name is HDB
+stock_name = 'TSLA'  # Assuming the stock name is HDB
 trade_history = []
 
 # Check if the last position is a buy position
@@ -157,31 +155,29 @@ trade_df = pd.DataFrame(trade_history, columns=['Stock_Name','Profit/Loss'])
 trade_df.to_sql('trade_history', engine, if_exists='append', index=False)
 
 # %%
-import mplfinance as mpf
-
-# %%
-# Fetch AAPL stock data from Yahoo Finance
+# Fetch TSLA stock data from Yahoo Finance
 start_date = '2023-02-21'
-end_date = '2024-02-17'
-aapl = yf.download('AAPL', start=start_date, end=end_date)
+end_date = '2024-02-16'
+tsla = yf.download('TSLA', start=start_date, end=end_date)
 
-# Calculate moving averages for AAPL data
-aapl['50-day MA'] = aapl['Close'].rolling(window=50).mean()
-aapl['500-day MA'] = aapl['Close'].rolling(window=500).mean()
-aapl['20-day MA'] = aapl['Close'].rolling(window=20).mean()
-aapl['200-day MA'] = aapl['Close'].rolling(window=200).mean()
-aapl['10-day MA'] = aapl['Close'].rolling(window=10).mean()
-aapl['5-day MA'] = aapl['Close'].rolling(window=5).mean()
+# Calculate moving averages for TSLA data
+tsla['50-day MA'] = tsla['Close'].rolling(window=50).mean()
+tsla['500-day MA'] = tsla['Close'].rolling(window=500).mean()
+tsla['20-day MA'] = tsla['Close'].rolling(window=20).mean()
+tsla['200-day MA'] = tsla['Close'].rolling(window=200).mean()
+tsla['10-day MA'] = tsla['Close'].rolling(window=10).mean()
+tsla['5-day MA'] = tsla['Close'].rolling(window=5).mean()
 
-# Plot candlestick chart for AAPL stock data
-mpf.plot(aapl, type='candle', style='charles', ylabel='Price', ylabel_lower='Volume', 
-         volume=True, mav=(50, 500), figsize=(14, 7), title='AAPL Candlestick Chart with Moving Averages')
+# Plot candlestick chart for TSLA stock data
+mpf.plot(tsla, type='candle', style='charles', ylabel='Price', ylabel_lower='Volume', 
+         volume=True, mav=(50, 500), figsize=(14, 7), title='TSLA Candlestick Chart with Moving Averages')
 
 # Annotate buy/sell positions on the plot
 for position in positions:
     date_index = pd.to_datetime(position[1]).date()
-    if position[0] in ['Buy', 'Sell'] and date_index in aapl.index:
-        mpf.plot(aapl.loc[date_index], type='scatter', style='o', markersize=100, color='r' if position[0] == 'Buy' else 'g')
+    if position[0] in ['Buy', 'Sell'] and date_index in tsla.index:
+        mpf.plot(tsla.loc[date_index], type='scatter', style='o', markersize=100, color='r' if position[0] == 'Buy' else 'g')
+
 
 # %%
 

@@ -1,11 +1,8 @@
 # %%
-pip install sqlalchemy
-
-
-# %%
 import pandas as pd
 import numpy as np
 import yfinance as yf
+import mplfinance as mpf
 
 # %%
 from sqlalchemy import create_engine
@@ -20,56 +17,73 @@ try:
 except Exception as e:
     print("Unable to connect to the database:", e)
 
-
 # %%
-query = 'SELECT * FROM aapl'  # Adjust query based on your table structure
-df = pd.read_sql(query, engine)
-
-# %%
-df
+df=pd.read_csv('/Users/hrishityelchuri/TBTFW_task/TBTFW_task/data/INR=X.csv')
 
 # %%
 df.info()
 
 # %%
-df.describe()
-
-# %%
-df.duplicated().sum()
+df
 
 # %% [markdown]
-# There are no duplicate values,missing values,etc.
+# The dataset contains 1 null value
 
 # %%
-# Fetch AAPL stock data from Yahoo Finance
-start_date = '2021-02-21'
+df[df.isnull().any(axis=1)]
+
+# %% [markdown]
+# We can fill this by getting real time value from yfinance
+
+# %%
+# Fetch JIOFIN.NS stock data from Yahoo Finance
+start_date = '2019-02-19'
 end_date = '2024-02-17'
-aapl = yf.download('AAPL', start=start_date, end=end_date)
-aapl.reset_index(inplace=True)
+inr = yf.download('INR=X', start=start_date, end=end_date)
+inr.reset_index(inplace=True)
 
 # %%
-# Calculate moving averages for AAPL data
-aapl['50-day MA'] = aapl['Close'].rolling(window=50).mean()
-aapl['500-day MA'] = aapl['Close'].rolling(window=500).mean()
-aapl['20-day MA'] = aapl['Close'].rolling(window=20).mean()
-aapl['200-day MA'] = aapl['Close'].rolling(window=200).mean()
-aapl['10-day MA'] = aapl['Close'].rolling(window=10).mean()
-aapl['5-day MA'] = aapl['Close'].rolling(window=5).mean()
+df=inr.copy()
 
 # %%
-# Assign moving average values from AAPL data to the corresponding columns in df
-df['50-day MA'] = aapl['50-day MA'].iloc[503:753].values
-df['500-day MA'] = aapl['500-day MA'].iloc[503:753].values
-df['20-day MA'] = aapl['20-day MA'].iloc[503:753].values
-df['200-day MA'] = aapl['200-day MA'].iloc[503:753].values
-df['10-day MA'] = aapl['10-day MA'].iloc[503:753].values
-df['5-day MA'] = aapl['5-day MA'].iloc[503:753].values
+# Fetch MARA stock data from Yahoo Finance
+start_date = '2017-02-19'
+end_date = '2024-02-17'
+inr = yf.download('INR=X', start=start_date, end=end_date)
+inr.reset_index(inplace=True)
+
+# %%
+inr
+
+# %%
+# Calculate moving averages for INR data
+inr['50-day MA'] = inr['Close'].rolling(window=50).mean()
+inr['500-day MA'] = inr['Close'].rolling(window=500).mean()
+inr['20-day MA'] = inr['Close'].rolling(window=20).mean()
+inr['200-day MA'] = inr['Close'].rolling(window=200).mean()
+inr['10-day MA'] = inr['Close'].rolling(window=10).mean()
+inr['5-day MA'] = inr['Close'].rolling(window=5).mean()
+
+# %%
+inr
+
+# %%
+inr[inr['Date']=='2019-02-19']
+
+# %%
+# Assign moving average values from INR data to the corresponding columns in df
+df['50-day MA'] = inr['50-day MA'].iloc[519:1822].values
+df['500-day MA'] = inr['500-day MA'].iloc[519:1822].values
+df['20-day MA'] = inr['20-day MA'].iloc[519:1822].values
+df['200-day MA'] = inr['200-day MA'].iloc[519:1822].values
+df['10-day MA'] = inr['10-day MA'].iloc[519:1822].values
+df['5-day MA'] = inr['5-day MA'].iloc[519:1822].values
+
 
 # %%
 # Generate buy and sell signals
 df['Buy Signal'] = ((df['50-day MA'] > df['500-day MA']) & (df['20-day MA'] > df['200-day MA'])).astype(int)
 df['Sell Signal'] = ((df['20-day MA'] < df['200-day MA']) & (df['10-day MA'] < df['5-day MA'])).astype(int)
-
 
 # %%
 # Generate buy and sell signals, and track buy/sell positions (remaining part)
@@ -102,14 +116,8 @@ for position in positions:
     print(position)
 
 # %%
-
-
-# %% [markdown]
-# Here since the stock has only been bought according to the conditions specified. To get rough idea of profit/loss I have exited the stock on the latest date given to get potential profit/loss
-
-# %%
 # Initialize variables
-stock_name = 'AAPL'  # Assuming the stock name is HDB
+stock_name = 'INR=X'  # Assuming the stock name is HDB
 trade_history = []
 
 # Check if the last position is a buy position
@@ -157,31 +165,29 @@ trade_df = pd.DataFrame(trade_history, columns=['Stock_Name','Profit/Loss'])
 trade_df.to_sql('trade_history', engine, if_exists='append', index=False)
 
 # %%
-import mplfinance as mpf
+# Fetch INR stock data from Yahoo Finance
+start_date = '2023-02-20'
+end_date = '2024-02-16'
+inr = yf.download('INR=X', start=start_date, end=end_date)
 
-# %%
-# Fetch AAPL stock data from Yahoo Finance
-start_date = '2023-02-21'
-end_date = '2024-02-17'
-aapl = yf.download('AAPL', start=start_date, end=end_date)
+# Calculate moving averages for INR data
+inr['50-day MA'] = inr['Close'].rolling(window=50).mean()
+inr['500-day MA'] = inr['Close'].rolling(window=500).mean()
+inr['20-day MA'] = inr['Close'].rolling(window=20).mean()
+inr['200-day MA'] = inr['Close'].rolling(window=200).mean()
+inr['10-day MA'] = inr['Close'].rolling(window=10).mean()
+inr['5-day MA'] = inr['Close'].rolling(window=5).mean()
 
-# Calculate moving averages for AAPL data
-aapl['50-day MA'] = aapl['Close'].rolling(window=50).mean()
-aapl['500-day MA'] = aapl['Close'].rolling(window=500).mean()
-aapl['20-day MA'] = aapl['Close'].rolling(window=20).mean()
-aapl['200-day MA'] = aapl['Close'].rolling(window=200).mean()
-aapl['10-day MA'] = aapl['Close'].rolling(window=10).mean()
-aapl['5-day MA'] = aapl['Close'].rolling(window=5).mean()
-
-# Plot candlestick chart for AAPL stock data
-mpf.plot(aapl, type='candle', style='charles', ylabel='Price', ylabel_lower='Volume', 
-         volume=True, mav=(50, 500), figsize=(14, 7), title='AAPL Candlestick Chart with Moving Averages')
+# Plot candlestick chart for INR stock data
+mpf.plot(inr, type='candle', style='charles', ylabel='Price', ylabel_lower='Volume', 
+         volume=True, mav=(50, 500), figsize=(14, 7), title='INR Candlestick Chart with Moving Averages')
 
 # Annotate buy/sell positions on the plot
 for position in positions:
     date_index = pd.to_datetime(position[1]).date()
-    if position[0] in ['Buy', 'Sell'] and date_index in aapl.index:
-        mpf.plot(aapl.loc[date_index], type='scatter', style='o', markersize=100, color='r' if position[0] == 'Buy' else 'g')
+    if position[0] in ['Buy', 'Sell'] and date_index in inr.index:
+        mpf.plot(inr.loc[date_index], type='scatter', style='o', markersize=100, color='r' if position[0] == 'Buy' else 'g')
+
 
 # %%
 
